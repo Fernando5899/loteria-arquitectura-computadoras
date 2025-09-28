@@ -1,0 +1,23 @@
+.card {
+    background-color: var(--color-bg-secondary);
+    border: 0.2rem solid var(--color-accent-secondary);
+    border-radius: 0.8rem;
+    padding: 1.6rem;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    aspect-ratio: 1 / 1; /* Para que sea un cuadrado perfecto */
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.word {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+    text-align: center;
+}
