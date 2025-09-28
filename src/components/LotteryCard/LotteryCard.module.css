@@ -1,23 +1,44 @@
 .card {
+    container-type: inline-size;
+    container-name: lottery-card;
+    aspect-ratio: 1 / 1;
+    width: 100%;
     background-color: var(--color-bg-secondary);
-    border: 0.2rem solid var(--color-accent-secondary);
-    border-radius: 0.8rem;
-    padding: 1.6rem;
+    border: 0.2rem solid var(--color-primary);
+    border-radius: 1.2rem;
+    padding: 0.5rem;
     display: flex;
     justify-content: center;
-    align-content: center;
-    aspect-ratio: 1 / 1; /* Para que sea un cuadrado perfecto */
-    transition: all 0.2s ease-in-out;
+    align-items: center;
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer;
 }
 
 .card:hover {
     transform: scale(1.05);
-    cursor: pointer;
 }
 
 .word {
-    font-size: 1.8rem;
-    font-weight: 600;
     color: var(--color-text);
     text-align: center;
+    font-weight: 600;
+    font-size: 1.6rem;
+    text-wrap: balance;
+
+    /* --- CAMBIO CLAVE AQUÍ --- */
+    /* Esta regla es más 'agresiva'. Romperá la palabra en CUALQUIER letra si es necesario para que no se desborde. Es nuestro seguro definitivo. */
+    word-break: break-all;
+}
+
+/* Hacemos nuestras queries un poco más sensibles, para que se activen antes */
+@container lottery-card (max-width: 90px) {
+    .word {
+        font-size: 1.4rem;
+    }
+}
+
+@container lottery-card (max-width: 75px) {
+    .word {
+        font-size: 1.2rem;
+    }
 }
