@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { socket } from "./services/socket.ts";
 import { LotteryBoard } from "./components/LotteryBoard/LotteryBoard.tsx";
 import styles from "./App.module.css";
 import { shuffleArray} from "./utils/shuffle.ts";
@@ -35,6 +36,23 @@ function App() {
 
         // Creamos el tablero del jugador con las primeras 24 cartas del mazo barajado
         setPlayerBoard(shuffleDeck.slice(0, 24));
+
+        function  onConnect() {
+            console.log(`Conectado al servidor con id ${socket.id}`)
+        }
+
+        function onDisconnect() {
+            console.log(`Desconexión del servidor con id ${socket.id}`)
+        }
+
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+
+        // Limpieza al desmontar el componente
+        return () => {
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+        };
     }, []);
 
 
