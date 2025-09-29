@@ -1,0 +1,93 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 50rem;
+}
+
+.mainCardWrapper {
+    text-align: center;
+}
+
+.mainCardLabel {
+    font-size: 1.6rem;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+}
+
+.mainCard {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: var(--color-bg-secondary);
+    border-radius: 1rem;
+    border: 2px solid var(--color-primary);
+    min-height: 10rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 2rem;
+    width: 100%;
+    text-align: center;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+
+.nextButton {
+    padding: 1.5rem 3rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: 5rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.nextButton:hover {
+    background-color: #5A2BAD;
+    transform: translateY(-2px);
+}
+
+.nextButton:disabled {
+    background-color: #CCC;
+    cursor: not-allowed;
+}
+
+.remaining {
+    font-size: 1.4rem;
+    color: var(--color-text);
+}
+
+.history {
+    width: 100%;
+    text-align: center;
+}
+
+.historyTitle {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.historyGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+}
+
+.historyCard {
+    background-color: var(--color-bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+}
+
