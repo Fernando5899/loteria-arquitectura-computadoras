@@ -15,3 +15,37 @@
     text-align: center;
     text-wrap: balance;
 }
+
+.notification {
+    position: fixed; /* La sacamos del flujo normal del documento */
+    top: 2rem; /* La pegamos arriba */
+    left: 50%;
+    transform: translateX(-50%); /* Truco para centrarla horizontalmente */
+
+    background-color: #E74C3C; /* Un rojo de error */
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 0.8rem;
+    box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.2);
+
+    z-index: 1000; /* Nos aseguramos que este encima de todo */
+
+    /* Animación de entrada y sálida */
+    animation: fadeInOut 3s ease-in-out forwards;
+}
+
+/* Definimos la animación */
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-2rem);
+    }
+    15%, 85% { /* Se mantiene visible desde el 15% al 85 % de la duración */
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-2rem);
+    }
+}

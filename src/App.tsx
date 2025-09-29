@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LotteryBoard } from "./components/LotteryBoard/LotteryBoard.tsx";
 import styles from "./App.module.css";
+import { shuffleArray} from "./utils/shuffle.ts";
 
 // Datos de prueba - 24 palabras
-const mockWords = [
+const ALL_WORDS = [
     'CPU', 'ALU', 'RAM', 'ROM', 'Caché', 'GPU', 'Placa Base', 'BIOS/UEFI',
-    'Bus de Datos', 'Bus de Direcciones', 'Von Neumann', 'Harvard',
-    'ISA', 'CISC', 'RISC', 'Pipeline', 'Multiprocesamiento', 'Multihilo',
-    'Kernel', 'Drivers', 'SSD', 'HDD', 'Periférico', 'Puerto I/O'
+    'Bus de Datos', 'Bus de Direcciones', 'Arquitectura Von Neumann', 'Arquitectura Harvard',
+    'Set de Instrucciones (ISA)', 'CISC', 'RISC', 'Pipeline (Segmentación)',
+    'Multiprocesamiento', 'Multihilo (Multithreading)', 'Sistema Operativo',
+    'Kernel (Núcleo)', 'Drivers (Controladores)', 'SSD', 'HDD', 'Periférico',
+    'Puerto (I/O Port)', 'Latencia', 'Ancho de Banda', 'Reloj del Sistema (Clock Speed)',
+    'Virtualización', 'Firmware'
 ];
 
 function App() {
@@ -15,23 +19,51 @@ function App() {
     // y la `setMarkedWords` es la única función que puede modificarla
     const [markedWords, setMarkedWords] = useState<string[]>([]); // Inicialmente, no hay palabras marcadas
 
+    // Nuevos Estados
+    const [deck, setDeck] = useState<string[]>([]);
+    const [calledCards, setCalledCards] = useState<string[]>([]);
+    const [playerBoard, setPlayerBoard] = useState<string[]>([]); // Estado para el tablero del jugador
+    const [notification, setNotification] = useState('');
+
+    // useEffect se ejecuta una sola vez cuando el componente se monta
+    useEffect(() => {
+        // Barajamos mazo completo de 30 palabras
+        const shuffleDeck = shuffleArray(ALL_WORDS);
+        setDeck(shuffleDeck);
+
+        // Creamos el tablero del jugador con las primeras 24 cartas del mazo barajado
+        setPlayerBoard(shuffleDeck.slice(0, 24));
+    }, []);
+
     // Crear la función que manejará los clics en las cartas
     const handleCardClick = (clickedWord: string) => {
-        // Verificamos si la palabra ya está en nuestra lista de marcadas
+      // Un jugador solo puede marcar una carta si ya ha sido cantada
+        if (!calledCards.includes(clickedWord)) {
+            setNotification(`No seas tramposo: La carta "${clickedWord}" aún no ha salido.`)
+
+            // Hacemos que la notificación desaparezca después de 2.5 segundos
+            setTimeout(() => {
+                setNotification('');
+            }, 3000);
+            return; // Detenemos la ejecución
+        }
+
+        // Si la carta es válida, procedemos a marcarla o desmarcarla
         if (markedWords.includes(clickedWord)) {
-            // Si ya está, creamos un nuevo array filtrando (quitando) esa palabra
             setMarkedWords(markedWords.filter(word => word !== clickedWord));
         } else {
-            // Si no está, creamos un nuevo array con todo lo anterior... y la nueva palabra
-            setMarkedWords([...markedWords,clickedWord]);
+            setMarkedWords([...markedWords, clickedWord]);
         }
     };
     return (
       <div className={styles.appContainer}>
+          {/* Este div solo se mostrará si 'notificación tiene texto '*/}
+          {notification && <div className={styles.notification}>{notification}</div>}
+
           <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
           {/* Pasamos el estado y la función como props al tablero */}
           <LotteryBoard
-              words={mockWords}
+              words={playerBoard} // Usamos el tablero dinámico
               markedWords={markedWords}
               onCardClick={handleCardClick}
           />
