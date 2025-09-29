@@ -1,6 +1,6 @@
 /* src/components/LoginView/LoginView.module.css */
 .container {
-    background-color: white;
+    background-color: var(--color-bg-secondary);
     padding: 3rem 4rem;
     border-radius: 1.5rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);

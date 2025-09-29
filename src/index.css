@@ -5,33 +5,20 @@
 }
 
 :root {
-    /* Paleta de Colores */
+    /* Paleta de Colores (Modo Claro - por defecto) */
     --color-bg-main: #FFFBF5;
     --color-bg-secondary: #F7EFE5;
     --color-text: #4C3D3D;
-    --color-primary: #7743DB; /* Usaremos el violeta como primario */
+    --color-primary: #7743DB;
     --color-accent: #F5A6E6;
 
-    /* Trick para que 1rem = 10px */
     font-size: 62.5%;
 }
 
-body {
-    margin: 0;
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
-    font-size: 1.6rem; /* Tamaño de letra base de 16px */
-    color: var(--color-text);
-    background-color: var(--color-bg-main);
-}
-
-[data-theme="dark"] {
-    [data-theme='dark'] {
-        --color-bg-main: #1a1a2e; /* Un azul muy oscuro */
-        --color-bg-secondary: #16213e; /* Un azul naval */
-        --color-text: #e0e0e0; /* Un gris claro para el texto */
-        --color-primary: #9d84e1; /* Un lila más brillante para contraste */
-        --color-accent: #f5a6e6; /* Mantenemos el acento rosa, que resalta bien */
-    }
+[data-theme='dark'] {
+    --color-bg-main: #1a1a2e;       /* Un azul muy oscuro */
+    --color-bg-secondary: #16213e;  /* Un azul naval */
+    --color-text: #e0e0e0;          /* Un gris claro para el texto */
+    --color-primary: #9d84e1;       /* Un lila más brillante para contraste */
+    --color-accent: #f5a6e6;        /* Mantenemos el acento rosa, que resalta bien */
 }
