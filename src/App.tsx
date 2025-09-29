@@ -1,61 +1,68 @@
+// src/App.tsx
 import { useState, useEffect } from "react";
 import { socket } from "./services/socket.ts";
 import { LotteryBoard } from "./components/LotteryBoard/LotteryBoard.tsx";
 import styles from "./App.module.css";
 import { CrierView } from "./components/CrierView/CrierView.tsx";
+import { GameOverModal } from "./components/GameOverModal/GameOverModal.tsx";
 
+// Para las notificaciones de conexión
+type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
-    // Inicializar el estado. ``markedWords` es la memoria,
-    // y la `setMarkedWords` es la única función que puede modificarla
-    const [markedWords, setMarkedWords] = useState<string[]>([]); // Inicialmente, no hay palabras marcadas
+    const [markedWords, setMarkedWords] = useState<string[]>([]);
     const [deck, setDeck] = useState<string[]>([]);
     const [calledCards, setCalledCards] = useState<string[]>([]);
-    const [playerBoard, setPlayerBoard] = useState<string[]>([]); // Estado para el tablero del jugador
+    const [playerBoard, setPlayerBoard] = useState<string[]>([]);
     const [notification, setNotification] = useState('');
     const [currentView, setCurrentView] = useState('crier');
+    const [gameResult, setGameResult] = useState<{ isOver: boolean; winnerId: string | null }>({ isOver: false, winnerId: null });
+    const [toasts, setToasts] = useState<Toast[]>([]); // Estado para los mensajes de conexión
 
-    // useEffect se ejecuta una sola vez cuando el componente se monta
     useEffect(() => {
-        // Lógica de los sockets
-        socket.on('connect', () => console.log(`Conectado: ${socket.id}`));
-        socket.on('disconnect', () => console.log(`Desconectado: ${socket.id}`));
+        const addToast = (message: string, type: Toast['type']) => {
+            const id = Date.now();
+            setToasts(prev => [...prev, { id, message, type }]);
+            setTimeout(() => {
+                setToasts(prev => prev.filter(toast => toast.id !== id));
+            }, 4000); // El toast desaparece después de 4 segundos
+        };
 
-        //El servidor nos envía el estado del juego
+        socket.on('connect', () => addToast(`¡Te has conectado! ID: ${socket.id}`, 'connect'));
+        socket.on('disconnect', () => addToast('Te has desconectado del servidor.', 'disconnect'));
+
         socket.on('game:gameState', (state) => {
             setDeck(state.deck);
             setCalledCards(state.calledCards);
-            // Creamos el tablero del jugador con el mazo que nos dio el servidor
             setPlayerBoard(state.deck.slice(0, 24));
+            setMarkedWords([]); // Limpiamos el tablero al recibir nuevo estado
+            setGameResult({ isOver: state.isGameWon, winnerId: state.winnerId });
         });
 
-        // El servidor nos anuncia una nueva carta cantada
-        socket.on('game:newCard', (data) => {
-            setCalledCards(data.allCalledCards);
-        });
+        socket.on('game:newCard', (data) => setCalledCards(data.allCalledCards));
+        socket.on('game:gameOver', ({ winnerId }) => setGameResult({ isOver: true, winnerId }));
+
+        // Nuevos eventos para notificaciones de otros jugadores
+        socket.on('user:connected', ({ userId }) => addToast(`Jugador conectado: ${userId.slice(0, 5)}...`, 'connect'));
+        socket.on('user:disconnected', ({ userId }) => addToast(`Jugador desconectado: ${userId.slice(0, 5)}...`, 'disconnect'));
 
         return () => {
             socket.off('connect');
             socket.off('disconnect');
             socket.off('game:gameState');
             socket.off('game:newCard');
+            socket.off('game:gameOver');
+            socket.off('user:connected');
+            socket.off('user:disconnected');
         };
     }, []);
 
-    // Crear la función que manejará los clics en las cartas
     const handleCardClick = (clickedWord: string) => {
-      // Un jugador solo puede marcar una carta si ya ha sido cantada
         if (!calledCards.includes(clickedWord)) {
-            setNotification(`No seas tramposo: La carta "${clickedWord}" aún no ha salido.`)
-
-            // Hacemos que la notificación desaparezca después de 2.5 segundos
-            setTimeout(() => {
-                setNotification('');
-            }, 3000);
-            return; // Detenemos la ejecución
+            setNotification(`¡La carta "${clickedWord}" aún no ha salido!`);
+            setTimeout(() => setNotification(''), 2500);
+            return;
         }
-
-        // Si la carta es válida, procedemos a marcarla o desmarcarla
         if (markedWords.includes(clickedWord)) {
             setMarkedWords(markedWords.filter(word => word !== clickedWord));
         } else {
@@ -64,26 +71,26 @@ function App() {
     };
 
     return (
-      <div className={styles.appContainer}>
-          {/* Este div solo se mostrará si 'notificación tiene texto '*/}
-          {notification && <div className={styles.notification}>{notification}</div>}
+        <div className={styles.appContainer}>
+            <div className={styles.toastContainer}>
+                {toasts.map(toast => (
+                    <div key={toast.id} className={`${styles.toast} ${styles[toast.type]}`}>
+                        {toast.message}
+                    </div>
+                ))}
+            </div>
+            {notification && <div className={styles.notification}>{notification}</div>}
+            <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
 
-          <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
+            {currentView === 'player' ? (
+                <LotteryBoard words={playerBoard} markedWords={markedWords} onCardClick={handleCardClick} />
+            ) : (
+                <CrierView deck={deck} calledCards={calledCards} />
+            )}
 
-          {/* Renderizado condicional de la vista */}
-          {currentView === 'player' ? (
-              <LotteryBoard
-                  words={playerBoard}
-                  markedWords={markedWords}
-                  onCardClick={handleCardClick}
-              />
-          ) : (
-              <CrierView
-                  deck={deck}
-                  calledCards={calledCards}
-              />
-          )}
-      </div>
-  )
+            {gameResult.isOver && <GameOverModal winnerId={gameResult.winnerId} />}
+        </div>
+    );
 }
+
 export default App;

@@ -10,3 +10,29 @@
     background-color: rgba(255, 255, 255, 0.5); /* Fondo semitransparente */
     box-shadow: 0 0.4rem 1.5rem rgba(76, 61, 61, 0.1);
 }
+
+.boardContainer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.winButton {
+    padding: 1.5rem 4rem;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(45deg, #F09433 0%, #E6683C 25%, #DC2743 50%, #CC2366 75%, #BC1888 100%);
+    border: none;
+    border-radius: 5rem;
+    cursor: pointer;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

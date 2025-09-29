@@ -1,0 +1,60 @@
+/* src/components/GameOverModal/GameOverModal.module.css */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    padding: 4rem;
+    border-radius: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.3s ease-out;
+}
+
+.title {
+    font-size: 4rem;
+    margin: 0 0 1rem;
+}
+
+.message {
+    font-size: 1.6rem;
+    margin: 0 0 3rem;
+    color: #555;
+}
+
+.playAgainButton {
+    padding: 1.5rem 3rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: 5rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.playAgainButton:hover {
+    transform: scale(1.05);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
