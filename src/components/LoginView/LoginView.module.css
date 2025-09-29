@@ -1,0 +1,62 @@
+/* src/components/LoginView/LoginView.module.css */
+.container {
+    background-color: white;
+    padding: 3rem 4rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 40rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-1rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.input {
+    padding: 1.2rem;
+    font-size: 1.6rem;
+    border: 1px solid #ddd;
+    border-radius: 0.8rem;
+}
+
+.button {
+    padding: 1.2rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    border-radius: 0.8rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.playerButton {
+    background-color: #333;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 2.5rem 0;
+}
+
+.error {
+    color: #e74c3c;
+    margin-top: 1rem;
+}

@@ -5,8 +5,8 @@ import { LotteryBoard } from "./components/LotteryBoard/LotteryBoard.tsx";
 import styles from "./App.module.css";
 import { CrierView } from "./components/CrierView/CrierView.tsx";
 import { GameOverModal } from "./components/GameOverModal/GameOverModal.tsx";
+import { LoginView } from "./components/LoginView/LoginView.tsx";
 
-// Para las notificaciones de conexión
 type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
@@ -15,9 +15,9 @@ function App() {
     const [calledCards, setCalledCards] = useState<string[]>([]);
     const [playerBoard, setPlayerBoard] = useState<string[]>([]);
     const [notification, setNotification] = useState('');
-    const [currentView, setCurrentView] = useState('crier');
+    const [currentView, setCurrentView] = useState<'login' | 'crier' | 'player'>('login');
     const [gameResult, setGameResult] = useState<{ isOver: boolean; winnerId: string | null }>({ isOver: false, winnerId: null });
-    const [toasts, setToasts] = useState<Toast[]>([]); // Estado para los mensajes de conexión
+    const [toasts, setToasts] = useState<Toast[]>([]);
 
     useEffect(() => {
         const addToast = (message: string, type: Toast['type']) => {
@@ -25,26 +25,25 @@ function App() {
             setToasts(prev => [...prev, { id, message, type }]);
             setTimeout(() => {
                 setToasts(prev => prev.filter(toast => toast.id !== id));
-            }, 4000); // El toast desaparece después de 4 segundos
+            }, 4000);
         };
 
-        socket.on('connect', () => addToast(`¡Te has conectado! ID: ${socket.id}`, 'connect'));
-        socket.on('disconnect', () => addToast('Te has desconectado del servidor.', 'disconnect'));
-
+        socket.on('connect', () => addToast(`¡Te has conectado!`, 'connect'));
+        socket.on('disconnect', () => addToast('Te has desconectado.', 'disconnect'));
         socket.on('game:gameState', (state) => {
             setDeck(state.deck);
             setCalledCards(state.calledCards);
             setPlayerBoard(state.deck.slice(0, 24));
-            setMarkedWords([]); // Limpiamos el tablero al recibir nuevo estado
+            setMarkedWords([]);
             setGameResult({ isOver: state.isGameWon, winnerId: state.winnerId });
         });
-
         socket.on('game:newCard', (data) => setCalledCards(data.allCalledCards));
         socket.on('game:gameOver', ({ winnerId }) => setGameResult({ isOver: true, winnerId }));
-
-        // Nuevos eventos para notificaciones de otros jugadores
-        socket.on('user:connected', ({ userId }) => addToast(`Jugador conectado: ${userId.slice(0, 5)}...`, 'connect'));
-        socket.on('user:disconnected', ({ userId }) => addToast(`Jugador desconectado: ${userId.slice(0, 5)}...`, 'disconnect'));
+        socket.on('user:connected', ({ userId }) => addToast(`Jugador se unió: ${userId.slice(0,5)}...`, 'connect'));
+        socket.on('user:disconnected', ({ userId }) => addToast(`Jugador se fue: ${userId.slice(0,5)}...`, 'disconnect'));
+        socket.on('crier:authSuccess', () => setCurrentView('crier'));
+        socket.on('crier:authFailed', () => alert('Contraseña incorrecta o el rol de cantador ya está ocupado.'));
+        socket.on('server:roomFull', () => alert('La sala está llena. No puedes unirte.'));
 
         return () => {
             socket.off('connect');
@@ -54,6 +53,9 @@ function App() {
             socket.off('game:gameOver');
             socket.off('user:connected');
             socket.off('user:disconnected');
+            socket.off('crier:authSuccess');
+            socket.off('crier:authFailed');
+            socket.off('server:roomFull');
         };
     }, []);
 
@@ -70,6 +72,22 @@ function App() {
         }
     };
 
+    const handleJoinAsPlayer = () => {
+        setCurrentView('player');
+    };
+
+    const renderView = () => {
+        switch (currentView) {
+            case 'crier':
+                return <CrierView deck={deck} calledCards={calledCards} />;
+            case 'player':
+                return <LotteryBoard words={playerBoard} markedWords={markedWords} onCardClick={handleCardClick} />;
+            case 'login':
+            default:
+                return <LoginView onJoinAsPlayer={handleJoinAsPlayer} />;
+        }
+    };
+
     return (
         <div className={styles.appContainer}>
             <div className={styles.toastContainer}>
@@ -82,11 +100,7 @@ function App() {
             {notification && <div className={styles.notification}>{notification}</div>}
             <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
 
-            {currentView === 'player' ? (
-                <LotteryBoard words={playerBoard} markedWords={markedWords} onCardClick={handleCardClick} />
-            ) : (
-                <CrierView deck={deck} calledCards={calledCards} />
-            )}
+            {renderView()}
 
             {gameResult.isOver && <GameOverModal winnerId={gameResult.winnerId} />}
         </div>
