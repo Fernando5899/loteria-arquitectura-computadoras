@@ -30,6 +30,15 @@
     word-break: break-all;
 }
 
+.marked {
+    background-color: var(--color-primary);
+    border-color: var(--color-accent);
+}
+
+.marked .word {
+    color: white;
+}
+
 /* Hacemos nuestras queries un poco más sensibles, para que se activen antes */
 @container lottery-card (max-width: 90px) {
     .word {
