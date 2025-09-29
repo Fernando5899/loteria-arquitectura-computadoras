@@ -60,6 +60,37 @@
     background-color: #7f8c8d; /* Gris */
 }
 
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; /* Para posicionar el botón */
+    margin-bottom: 2rem;
+}
+
+.themeToggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-primary);
+    color: var(--color-text);
+    font-size: 2rem;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.themeToggle:hover {
+    transform: scale(1.1) rotate(15deg);
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;

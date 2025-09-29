@@ -10,6 +10,7 @@ import { LoginView } from "./components/LoginView/LoginView.tsx";
 type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
+    // Estados del juego
     const [markedWords, setMarkedWords] = useState<string[]>([]);
     const [deck, setDeck] = useState<string[]>([]);
     const [calledCards, setCalledCards] = useState<string[]>([]);
@@ -19,6 +20,18 @@ function App() {
     const [gameResult, setGameResult] = useState<{ isOver: boolean; winnerId: string | null }>({ isOver: false, winnerId: null });
     const [toasts, setToasts] = useState<Toast[]>([]);
 
+    // Estado para el tema (oscuro/claro)
+    const [theme, setTheme] = useState(() => {
+        return localStorage.getItem('theme') || 'light';
+    });
+
+    // Efecto que aplica el tema al HTML y lo guarda
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    // Efecto para toda la lógica de sockets
     useEffect(() => {
         const addToast = (message: string, type: Toast['type']) => {
             const id = Date.now();
@@ -59,6 +72,10 @@ function App() {
         };
     }, []);
 
+    const toggleTheme = () => {
+        setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
+
     const handleCardClick = (clickedWord: string) => {
         if (!calledCards.includes(clickedWord)) {
             setNotification(`¡La carta "${clickedWord}" aún no ha salido!`);
@@ -98,7 +115,14 @@ function App() {
                 ))}
             </div>
             {notification && <div className={styles.notification}>{notification}</div>}
-            <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
+
+            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
+            <div className={styles.header}>
+                <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
+                <button onClick={toggleTheme} className={styles.themeToggle}>
+                    {theme === 'light' ? '🌙' : '☀️'}
+                </button>
+            </div>
 
             {renderView()}
 
