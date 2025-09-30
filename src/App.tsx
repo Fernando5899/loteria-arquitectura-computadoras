@@ -7,6 +7,8 @@ import { CrierView } from "./components/CrierView/CrierView.tsx";
 import { GameOverModal } from "./components/GameOverModal/GameOverModal.tsx";
 import { LoginView } from "./components/LoginView/LoginView.tsx";
 
+// 1. DEFINIMOS EL TIPO 'PLAYER' AQUÍ
+type Player = { id: string; name: string; role: 'crier' | 'player' };
 type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
@@ -17,13 +19,21 @@ function App() {
     const [playerBoard, setPlayerBoard] = useState<string[]>([]);
     const [notification, setNotification] = useState('');
     const [currentView, setCurrentView] = useState<'login' | 'crier' | 'player'>('login');
-    const [gameResult, setGameResult] = useState<{ isOver: boolean; winnerId: string | null }>({ isOver: false, winnerId: null });
+    const [gameResult, setGameResult] = useState<{ isOver: boolean; winner: Player | null }>({
+        isOver: false,
+        winner: null,
+    });
     const [toasts, setToasts] = useState<Toast[]>([]);
 
     // Estado para el tema (oscuro/claro)
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('theme') || 'light';
     });
+
+    // Función para regresar al inicio
+    const handleExitToLogin = () => {
+        setCurrentView('login');
+    };
 
     // Efecto que aplica el tema al HTML y lo guarda
     useEffect(() => {
@@ -43,17 +53,24 @@ function App() {
 
         socket.on('connect', () => addToast(`¡Te has conectado!`, 'connect'));
         socket.on('disconnect', () => addToast('Te has desconectado.', 'disconnect'));
+
         socket.on('game:gameState', (state) => {
             setDeck(state.deck);
             setCalledCards(state.calledCards);
             setPlayerBoard(state.deck.slice(0, 24));
             setMarkedWords([]);
-            setGameResult({ isOver: state.isGameWon, winnerId: state.winnerId });
+            // 2. CORRECCIÓN AQUÍ: Usamos 'winner' en lugar de 'winnerId'
+            setGameResult({ isOver: state.isGameWon, winner: state.winner });
         });
+
         socket.on('game:newCard', (data) => setCalledCards(data.allCalledCards));
-        socket.on('game:gameOver', ({ winnerId }) => setGameResult({ isOver: true, winnerId }));
-        socket.on('user:connected', ({ userId }) => addToast(`Jugador se unió: ${userId.slice(0,5)}...`, 'connect'));
-        socket.on('user:disconnected', ({ userId }) => addToast(`Jugador se fue: ${userId.slice(0,5)}...`, 'disconnect'));
+
+        socket.on('game:gameOver', ({ winner }) => {
+            setGameResult({ isOver: true, winner: winner });
+        });
+
+        socket.on('user:connected', ({ name }) => addToast(`Jugador '${name}' se ha unido.`, 'connect'));
+        socket.on('user:disconnected', ({ name }) => addToast(`Jugador '${name}' se ha ido.`, 'disconnect'));
         socket.on('crier:authSuccess', () => setCurrentView('crier'));
         socket.on('crier:authFailed', () => alert('Contraseña incorrecta o el rol de cantador ya está ocupado.'));
         socket.on('server:roomFull', () => alert('La sala está llena. No puedes unirte.'));
@@ -116,8 +133,12 @@ function App() {
             </div>
             {notification && <div className={styles.notification}>{notification}</div>}
 
-            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
             <div className={styles.header}>
+                {(currentView === 'player' || currentView === 'crier') && (
+                    <button onClick={handleExitToLogin} className={styles.exitButton}>
+                        Salir
+                    </button>
+                )}
                 <h1 className={styles.title}>Lotería de Arquitectura de Computadoras</h1>
                 <button onClick={toggleTheme} className={styles.themeToggle}>
                     {theme === 'light' ? '🌙' : '☀️'}
@@ -126,7 +147,7 @@ function App() {
 
             {renderView()}
 
-            {gameResult.isOver && <GameOverModal winnerId={gameResult.winnerId} />}
+            {gameResult.isOver && <GameOverModal winner={gameResult.winner} role={currentView} />}
         </div>
     );
 }

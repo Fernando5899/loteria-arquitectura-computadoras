@@ -1,24 +1,69 @@
+/* src/index.css */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 :root {
-    /* Paleta de Colores (Modo Claro - por defecto) */
-    --color-bg-main: #FFFBF5;
-    --color-bg-secondary: #F7EFE5;
-    --color-text: #4C3D3D;
-    --color-primary: #7743DB;
-    --color-accent: #F5A6E6;
+    /* MODO CLARO */
+    --color-bg-main: #F0F8FF; /* Azul claro (Alice Blue) */
+    --color-bg-secondary: #E6F2FF; /* Azul pálido (Light Cyan) */
+    --color-text: #1E3A5F; /* Azul naval (Dark Blue) */
+    --color-primary: #5C95FF; /* Azul brillante (Light Blue) */
+    --color-accent: #89CFF0; /*Azul bebé (Light Cyan)*/
+
+    --title-color: var(--color-text); /* Usará el color del texto principal */
+    --title-shadow: none;
+
+    /* Estilos de los paneles para el modo claro (sólidos) */
+    --panel-bg: var(--color-bg-secondary);
+    --panel-border: 1px solid var(--color-primary);
+    --panel-backdrop-filter: none;
 
     font-size: 62.5%;
 }
 
 [data-theme='dark'] {
-    --color-bg-main: #1a1a2e;       /* Un azul muy oscuro */
-    --color-bg-secondary: #16213e;  /* Un azul naval */
-    --color-text: #e0e0e0;          /* Un gris claro para el texto */
-    --color-primary: #9d84e1;       /* Un lila más brillante para contraste */
-    --color-accent: #f5a6e6;        /* Mantenemos el acento rosa, que resalta bien */
+    /* MODO OSCURO */
+    --color-bg-main: #1a1a2e;
+    --color-bg-secondary: #16213e;
+    --color-text: #e0e0e0;
+    --color-primary: #9d84e1;
+    --color-accent: #f5a6e6;
+
+    --title-color: #FFFFFF;
+    --title-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); /* Con sombra */
+
+    /* Estilos de los paneles para el modo oscuro (cristal) */
+    --panel-bg: rgba(255, 255, 255, 0.1);
+    --panel-border: 1px solid rgba(255, 255, 255, 0.18);
+    --panel-backdrop-filter: blur(10px);
+}
+
+body {
+    margin: 0;
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-size: 1.6rem;
+    color: var(--color-text);
+
+    background: linear-gradient(-45deg, #f0f8ff, #dbefff, #bce6ff, #89cff0);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+/* El fondo animado solo se aplica al body CUANDO el tema es oscuro */
+[data-theme='dark'] body {
+    background: linear-gradient(-45deg, #1a1a2e, #16213e, #7743DB, #4C3D3D);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }

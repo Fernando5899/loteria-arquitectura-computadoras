@@ -1,13 +1,16 @@
 .board {
+    background: var(--panel-bg);
+    border: var(--panel-border);
+    backdrop-filter: var(--panel-backdrop-filter);
+
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    padding: 1.5rem;
+    gap: 2rem;
+    padding: 1.6rem;
     width: 100%;
-    max-width: 40rem; /* Un buen ancho para 4 columnas */
+    max-width: 40rem;
     margin: 0 auto;
-    border-radius: 2rem;
-    background-color: rgba(255, 255, 255, 0.5); /* Fondo semitransparente */
+    border-radius: 1rem;
     box-shadow: 0 0.4rem 1.5rem rgba(76, 61, 61, 0.1);
 }
 

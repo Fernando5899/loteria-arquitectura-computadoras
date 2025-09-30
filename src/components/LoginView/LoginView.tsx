@@ -9,9 +9,10 @@ type LoginViewProps = {
 
 export const LoginView = ({ onJoinAsPlayer }: LoginViewProps) => {
     const [password, setPassword] = useState('');
+    // 1. Añadimos estado para el nombre de usuario
+    const [username, setUsername] = useState('');
     const [error, setError] = useState('');
 
-    // Escuchamos por si falla el login para mostrar un error
     useEffect(() => {
         const handleAuthFailed = () => setError('Contraseña incorrecta o rol no disponible.');
         socket.on('crier:authFailed', handleAuthFailed);
@@ -20,17 +21,30 @@ export const LoginView = ({ onJoinAsPlayer }: LoginViewProps) => {
         };
     }, []);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleCrierLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         socket.emit('crier:authenticate', password);
     };
 
+    // 2. Nueva función para manejar el ingreso como jugador
+    const handlePlayerJoin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!username.trim()) {
+            setError('Por favor, ingresa un nombre de usuario.');
+            return;
+        }
+        socket.emit('player:join', { name: username });
+        onJoinAsPlayer(); // Le avisamos a App.tsx que cambie la vista
+    };
+
     return (
         <div className={styles.container}>
             <h2>Elige tu Rol</h2>
-            <p>Ingresa la contraseña para ser el cantador o únete como jugador.</p>
-            <form onSubmit={handleLogin} className={styles.form}>
+
+            {/* Formulario para el Cantador */}
+            <form onSubmit={handleCrierLogin} className={styles.form}>
+                <p>Ingresa la contraseña para ser el cantador.</p>
                 <input
                     type="password"
                     value={password}
@@ -40,11 +54,24 @@ export const LoginView = ({ onJoinAsPlayer }: LoginViewProps) => {
                 />
                 <button type="submit" className={styles.button}>Ser Cantador</button>
             </form>
-            {error && <p className={styles.error}>{error}</p>}
+
             <hr className={styles.divider} />
-            <button onClick={onJoinAsPlayer} className={`${styles.button} ${styles.playerButton}`}>
-                Unirse como Jugador
-            </button>
+
+            {/* 3. Nuevo formulario para el Jugador */}
+            <form onSubmit={handlePlayerJoin} className={styles.form}>
+                <p>O ingresa tu nombre para unirte como jugador.</p>
+                <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Tu Nombre de Usuario"
+                    className={styles.input}
+                />
+                <button type="submit" className={`${styles.button} ${styles.playerButton}`}>
+                    Unirse como Jugador
+                </button>
+            </form>
+            {error && <p className={styles.error}>{error}</p>}
         </div>
     );
 };

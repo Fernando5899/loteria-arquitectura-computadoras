@@ -1,7 +1,7 @@
 // server/index.ts
 import express from 'express';
 import * as http from 'http';
-import { Server, Socket } from 'socket.io'; // Asegúrate de importar Socket
+import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 
 // --- CONSTANTES Y TIPOS ---
@@ -15,15 +15,15 @@ const ALL_WORDS = [
     'Virtualización', 'Firmware'
 ];
 const MAX_PLAYERS = 9;
-const CRIER_PASSWORD = 'PollitoRojo'; // La contraseña que pusimos de ejemplo
+const CRIER_PASSWORD = '1234'; // Puedes cambiar esta contraseña
 
-type Player = { id: string; role: 'crier' | 'player' };
+type Player = { id: string; name: string; role: 'crier' | 'player' };
 
 // --- ESTADO DEL JUEGO (VIVE EN EL SERVIDOR) ---
 let deck: string[] = [];
 let calledCards: string[] = [];
 let isGameWon = false;
-let winnerId: string | null = null;
+let winner: Player | null = null; // La única variable para el ganador
 let players: Player[] = [];
 
 // --- FUNCIONES DE AYUDA ---
@@ -41,14 +41,12 @@ function resetGame() {
     deck = shuffleArray(ALL_WORDS);
     calledCards = [];
     isGameWon = false;
-    winnerId = null;
+    winner = null; // Reseteamos el objeto winner completo
 }
 
 // --- INICIALIZACIÓN DEL SERVIDOR ---
 const app = express();
-app.use(cors());
 const server = http.createServer(app);
-
 const io = new Server(server, {
     cors: {
         origin: ["http://localhost:5173", "https://loteria-arquitectura-computadoras.vercel.app"],
@@ -56,83 +54,85 @@ const io = new Server(server, {
     }
 });
 
-// Inicializa el juego por primera vez cuando arranca el servidor
+// Inicializa el juego por primera vez al arrancar el servidor
 resetGame();
 
-// --- LÓGICA DE CONEXIÓN (UN SOLO BLOQUE) ---
+// --- LÓGICA DE CONEXIÓN ---
 io.on('connection', (socket: Socket) => {
 
-    // 1. Verificar si la sala está llena
     if (players.length >= MAX_PLAYERS) {
         socket.emit('server:roomFull');
         socket.disconnect(true);
-        console.log(`Conexión rechazada para ${socket.id}, sala llena.`);
         return;
     }
+    console.log(`✅ Usuario conectado: ${socket.id}`);
 
-    console.log(`Usuario conectado: ${socket.id}`);
+    // Le enviamos el estado actual del juego al nuevo usuario
+    socket.emit('game:gameState', { deck, calledCards, isGameWon, winner });
 
-    // 2. Notificar a los demás que alguien entró
-    socket.broadcast.emit('user:connected', { userId: socket.id });
-
-    // 3. El nuevo usuario se añade a la lista como jugador por defecto
-    const newPlayer: Player = { id: socket.id, role: 'player' };
-    players.push(newPlayer);
-
-    // 4. Enviar el estado actual del juego al nuevo usuario
-    socket.emit('game:gameState', { deck, calledCards, isGameWon, winnerId });
-    io.emit('game:playersUpdate', players); // Actualizar la lista de jugadores para todos
-
-    // 5. Escuchar por intentos de autenticación como Cantador
+    // Evento para autenticar al Cantador
     socket.on('crier:authenticate', (password: string) => {
         const crierExists = players.some(p => p.role === 'crier');
-        if (!crierExists && password === CRIER_PASSWORD) {
-            // Si la contraseña es correcta y no hay cantador, actualizamos su rol
-            const playerIndex = players.findIndex(p => p.id === socket.id);
-            if (playerIndex !== -1) {
-                players[playerIndex].role = 'crier';
-                socket.emit('crier:authSuccess');
-                io.emit('game:playersUpdate', players);
-                console.log(`${socket.id} ha sido asignado como Cantador.`);
-            }
-        } else {
-            socket.emit('crier:authFailed');
+        if (crierExists || password !== CRIER_PASSWORD) {
+            return socket.emit('crier:authFailed');
         }
+        const newCrier: Player = { id: socket.id, role: 'crier', name: 'Cantador' };
+        players.push(newCrier);
+        socket.emit('crier:authSuccess');
+        io.emit('game:playersUpdate', players);
+        socket.broadcast.emit('user:connected', { name: newCrier.name });
     });
 
-    // 6. Escuchar el resto de eventos del juego
+    // Evento para que un Jugador se una
+    socket.on('player:join', ({ name }: { name: string }) => {
+        const newPlayer: Player = { id: socket.id, role: 'player', name };
+        players.push(newPlayer);
+        socket.emit('player:assigned');
+        io.emit('game:playersUpdate', players);
+        socket.broadcast.emit('user:connected', { name: newPlayer.name });
+    });
+
+    // Evento para cantar la siguiente carta
     socket.on('crier:callNextCard', () => {
-        if (isGameWon || calledCards.length >= deck.length) return;
         const player = players.find(p => p.id === socket.id);
-        if (player?.role !== 'crier') return; // Solo el cantador puede llamar cartas
+        if (isGameWon || player?.role !== 'crier' || calledCards.length >= deck.length) return;
 
         const nextCard = deck[calledCards.length];
         calledCards.push(nextCard);
         io.emit('game:newCard', { newCard: nextCard, allCalledCards: calledCards });
     });
 
+    // Evento para declarar un ganador
     socket.on('player:declareWinner', () => {
         if (isGameWon) return;
+
+        const winningPlayer = players.find(p => p.id === socket.id);
+        if (!winningPlayer) return;
+
         isGameWon = true;
-        winnerId = socket.id;
-        io.emit('game:gameOver', { winnerId });
-        console.log(`🏆 ¡Ganador declarado por ${socket.id}!`);
+        winner = winningPlayer; // Guardamos el objeto completo del ganador
+
+        io.emit('game:gameOver', { winner });
+        console.log(`🏆 ¡Ganador declarado: ${winner.name} (${socket.id})!`);
     });
 
+    // Evento para reiniciar el juego
     socket.on('game:playAgain', () => {
         resetGame();
-        io.emit('game:gameState', { deck, calledCards, isGameWon, winnerId });
+        io.emit('game:gameState', { deck, calledCards, isGameWon, winner });
     });
 
+    // Evento cuando un usuario se desconecta
     socket.on('disconnect', () => {
-        console.log(`Usuario desconectado: ${socket.id}`);
-        players = players.filter(player => player.id !== socket.id);
-        io.emit('user:disconnected', { userId: socket.id });
+        const player = players.find(p => p.id === socket.id);
+        players = players.filter(p => p.id !== socket.id);
+        console.log(`❌ Usuario desconectado: ${socket.id}`);
+        if (player) {
+            io.emit('user:disconnected', { name: player.name });
+        }
         io.emit('game:playersUpdate', players);
     });
 });
 
 const PORT = 5000;
-server.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
+server.listen(PORT, () => console.log(`🚀 Servidor escuchando en el puerto ${PORT}`));
