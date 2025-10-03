@@ -13,8 +13,8 @@ const ALL_WORDS = [
     'Puerto (I/O Port)', 'Latencia', 'Ancho de Banda', 'Reloj del Sistema (Clock Speed)',
     'Virtualización', 'Firmware'
 ];
-const MAX_PLAYERS = 30;
-const CRIER_PASSWORD = 'AlexandraDimasPonce'; // Puedes cambiar esta contraseña
+const MAX_PLAYERS = 20;
+const CRIER_PASSWORD = 'Alexandra'; // Puedes cambiar esta contraseña
 
 type Player = { id: string; name: string; role: 'crier' | 'player' };
 
