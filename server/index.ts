@@ -2,7 +2,6 @@
 import express from 'express';
 import * as http from 'http';
 import { Server, Socket } from 'socket.io';
-import cors from 'cors';
 
 // --- CONSTANTES Y TIPOS ---
 const ALL_WORDS = [
@@ -14,7 +13,7 @@ const ALL_WORDS = [
     'Puerto (I/O Port)', 'Latencia', 'Ancho de Banda', 'Reloj del Sistema (Clock Speed)',
     'Virtualización', 'Firmware'
 ];
-const MAX_PLAYERS = 9;
+const MAX_PLAYERS = 30;
 const CRIER_PASSWORD = 'AlexandraDimasPonce'; // Puedes cambiar esta contraseña
 
 type Player = { id: string; name: string; role: 'crier' | 'player' };
