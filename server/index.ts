@@ -14,7 +14,7 @@ const ALL_WORDS = [
     'Virtualización', 'Firmware'
 ];
 const MAX_PLAYERS = 20;
-const CRIER_PASSWORD = 'Alexandra'; // Puedes cambiar esta contraseña
+const CRIER_PASSWORD = 'Aqui_se_cambia_la_contraseña'; // Puedes cambiar esta contraseña
 
 type Player = { id: string; name: string; role: 'crier' | 'player' };
 
