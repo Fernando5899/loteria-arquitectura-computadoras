@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState, useEffect } from "react";
+import {useState, useEffect, useRef} from "react";
 import { socket } from "./services/socket.ts";
 import { LotteryBoard } from "./components/LotteryBoard/LotteryBoard.tsx";
 import styles from "./App.module.css";
@@ -12,6 +12,10 @@ type Player = { id: string; name: string; role: 'crier' | 'player' };
 type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
+    // --- LÓGICA DE AUDIO ---
+    const audioRef = useRef<HTMLAudioElement | null>(null); // Corregido a camelCase: audioRef
+    const [isMuted, setIsMuted] = useState(true);
+
     // Estados del juego
     const [markedWords, setMarkedWords] = useState<string[]>([]);
     const [deck, setDeck] = useState<string[]>([]);
@@ -30,10 +34,13 @@ function App() {
         return localStorage.getItem('theme') || 'light';
     });
 
-    // Función para regresar al inicio
-    const handleExitToLogin = () => {
-        setCurrentView('login');
-    };
+    // --- LÓGICA DE AUDIO ---
+    // useEffect para inicializar el audio una sola vez
+    useEffect(() => {
+        audioRef.current = new Audio('/audio/background-music.ogg');
+        audioRef.current.loop = true;
+        audioRef.current.volume = 1;
+    }, []);
 
     // Efecto que aplica el tema al HTML y lo guarda
     useEffect(() => {
@@ -51,27 +58,39 @@ function App() {
             }, 4000);
         };
 
+        // --- LÓGICA DE AUDIO ---
+        // Función para iniciar la música de forma segura
+        const playMusic = () => {
+            if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().catch(error => console.error("Error al reproducir audio:", error));
+            }
+        };
+
+        const handleAuthSuccess = () => {
+            setCurrentView('crier');
+            playMusic();
+        };
+
+        const handlePlayerAssigned = () => {
+            setCurrentView('player');
+            playMusic();
+        };
+
         socket.on('connect', () => addToast(`¡Te has conectado!`, 'connect'));
         socket.on('disconnect', () => addToast('Te has desconectado.', 'disconnect'));
-
         socket.on('game:gameState', (state) => {
             setDeck(state.deck);
             setCalledCards(state.calledCards);
             setPlayerBoard(state.deck.slice(0, 24));
             setMarkedWords([]);
-            // 2. CORRECCIÓN AQUÍ: Usamos 'winner' en lugar de 'winnerId'
             setGameResult({ isOver: state.isGameWon, winner: state.winner });
         });
-
         socket.on('game:newCard', (data) => setCalledCards(data.allCalledCards));
-
-        socket.on('game:gameOver', ({ winner }) => {
-            setGameResult({ isOver: true, winner: winner });
-        });
-
+        socket.on('game:gameOver', ({ winner }) => setGameResult({ isOver: true, winner: winner }));
         socket.on('user:connected', ({ name }) => addToast(`Jugador '${name}' se ha unido.`, 'connect'));
         socket.on('user:disconnected', ({ name }) => addToast(`Jugador '${name}' se ha ido.`, 'disconnect'));
-        socket.on('crier:authSuccess', () => setCurrentView('crier'));
+        socket.on('crier:authSuccess', handleAuthSuccess);
+        socket.on('player:assigned', handlePlayerAssigned);
         socket.on('crier:authFailed', () => alert('Contraseña incorrecta o el rol de cantador ya está ocupado.'));
         socket.on('server:roomFull', () => alert('La sala está llena. No puedes unirte.'));
 
@@ -83,14 +102,30 @@ function App() {
             socket.off('game:gameOver');
             socket.off('user:connected');
             socket.off('user:disconnected');
-            socket.off('crier:authSuccess');
+            socket.off('crier:authSuccess', handleAuthSuccess);
+            socket.off('player:assigned', handlePlayerAssigned);
             socket.off('crier:authFailed');
             socket.off('server:roomFull');
         };
     }, []);
 
+    // Función para regresar al inicio
+    const handleExitToLogin = () => {
+        setCurrentView('login');
+    };
+
     const toggleTheme = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
+
+    // --- LÓGICA DE AUDIO ---
+    // Función para el botón de silencio
+    const toggleMute = () => {
+        if (audioRef.current) {
+            const newMutedState = !audioRef.current.muted;
+            audioRef.current.muted = newMutedState;
+            setIsMuted(newMutedState);
+        }
     };
 
     const handleCardClick = (clickedWord: string) => {
@@ -145,9 +180,16 @@ function App() {
                 </button>
             </div>
 
+            {/* --- LÓGICA DE AUDIO --- */}
+            {/* Botón para silenciar */}
+            <button onClick={toggleMute} className={styles.muteButton}>
+                {isMuted ? '🔇' : '🔊'}
+            </button>
+
             {renderView()}
 
-            {gameResult.isOver && <GameOverModal winner={gameResult.winner} role={currentView} />}
+            {/* Pasamos el estado de silencio al modal */}
+            {gameResult.isOver && <GameOverModal winner={gameResult.winner} role={currentView} isMuted={isMuted} />}
         </div>
     );
 }

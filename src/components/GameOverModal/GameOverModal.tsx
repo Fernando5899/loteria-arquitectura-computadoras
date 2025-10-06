@@ -1,27 +1,33 @@
 // src/components/GameOverModal/GameOverModal.tsx
+import { useEffect } from 'react';
 import Confetti from 'react-confetti';
 import { socket } from '../../services/socket';
 import styles from './GameOverModal.module.css';
 
-// El modal ahora espera el objeto 'winner' y el 'role' del usuario actual
 type Player = { id: string; name: string; role: 'crier' | 'player' };
 type GameOverModalProps = {
     winner: Player | null;
     role: 'crier' | 'player' | 'login';
+    isMuted: boolean; // Recibimos el estado de silencio
 };
 
-export const GameOverModal = ({ winner, role }: GameOverModalProps) => {
-    // --- AÑADE ESTA LÍNEA PARA DEPURAR ---
-    console.log("Mi ID de socket es:", socket.id, "y el ID del ganador es:", winner?.id);
-
+export const GameOverModal = ({ winner, role, isMuted }: GameOverModalProps) => {
     const didIWin = socket.id === winner?.id;
 
+    // Efecto para el sonido de victoria
+    useEffect(() => {
+        // Si yo gané y el audio no está silenciado...
+        if (didIWin && !isMuted) {
+            const victoryAudio = new Audio('/audio/victory-sound.ogg'); // Usamos .ogg
+            victoryAudio.volume = 0.3;
+            victoryAudio.play();
+        }
+    }, []); // El array vacío asegura que se ejecute solo una vez
 
     const handlePlayAgain = () => {
         socket.emit('game:playAgain');
     };
 
-    // Lógica para determinar el título y el mensaje
     let title = '';
     let message = '';
 
@@ -29,10 +35,10 @@ export const GameOverModal = ({ winner, role }: GameOverModalProps) => {
         title = '¡Juego Terminado!';
         message = `El ganador es ${winner?.name || 'un jugador'}.`;
     } else if (didIWin) {
-        title = '🎉 ¡Ganaste! 🎉';
+        title = '¡Ganaste!';
         message = '¡Felicidades, llenaste tu tablero!';
     } else {
-        title = '😔 Perdiste';
+        title = 'Perdiste';
         message = `El ganador es ${winner?.name || 'otro jugador'}.`;
     }
 
@@ -42,7 +48,6 @@ export const GameOverModal = ({ winner, role }: GameOverModalProps) => {
             <div className={styles.modal}>
                 <h2 className={styles.title}>{title}</h2>
                 <p className={styles.message}>{message}</p>
-                {/* El cantador siempre ve el botón de jugar de nuevo */}
                 {role === 'crier' && (
                     <button onClick={handlePlayAgain} className={styles.playAgainButton}>
                         Jugar de Nuevo
