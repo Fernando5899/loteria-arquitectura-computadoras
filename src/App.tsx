@@ -13,7 +13,7 @@ type Toast = { id: number; message: string; type: 'connect' | 'disconnect' };
 
 function App() {
     // --- LÓGICA DE AUDIO ---
-    const audioRef = useRef<HTMLAudioElement | null>(null); // Corregido a camelCase: audioRef
+    const audioRef = useRef<HTMLAudioElement | null>(null); // Nombre correcto
     const [isMuted, setIsMuted] = useState(true);
 
     // Estados del juego
@@ -34,12 +34,12 @@ function App() {
         return localStorage.getItem('theme') || 'light';
     });
 
-    // --- LÓGICA DE AUDIO ---
     // useEffect para inicializar el audio una sola vez
     useEffect(() => {
+        // CORREGIDO: Usamos el nombre correcto 'audioRef'
         audioRef.current = new Audio('/audio/background-music.ogg');
         audioRef.current.loop = true;
-        audioRef.current.volume = 1;
+        audioRef.current.volume = 0.1; // CORREGIDO: Volumen más bajo
     }, []);
 
     // Efecto que aplica el tema al HTML y lo guarda
@@ -58,9 +58,9 @@ function App() {
             }, 4000);
         };
 
-        // --- LÓGICA DE AUDIO ---
-        // Función para iniciar la música de forma segura
         const playMusic = () => {
+            // CORREGIDO: Usamos el nombre correcto 'audioRef'
+            console.log('Intentando reproducir música. ¿Está pausado?', audioRef.current?.paused);
             if (audioRef.current && audioRef.current.paused) {
                 audioRef.current.play().catch(error => console.error("Error al reproducir audio:", error));
             }
@@ -118,9 +118,8 @@ function App() {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
 
-    // --- LÓGICA DE AUDIO ---
-    // Función para el botón de silencio
     const toggleMute = () => {
+        // CORREGIDO: Usamos el nombre correcto 'audioRef'
         if (audioRef.current) {
             const newMutedState = !audioRef.current.muted;
             audioRef.current.muted = newMutedState;
@@ -180,15 +179,12 @@ function App() {
                 </button>
             </div>
 
-            {/* --- LÓGICA DE AUDIO --- */}
-            {/* Botón para silenciar */}
             <button onClick={toggleMute} className={styles.muteButton}>
                 {isMuted ? '🔇' : '🔊'}
             </button>
 
             {renderView()}
 
-            {/* Pasamos el estado de silencio al modal */}
             {gameResult.isOver && <GameOverModal winner={gameResult.winner} role={currentView} isMuted={isMuted} />}
         </div>
     );
